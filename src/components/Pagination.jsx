@@ -1,71 +1,45 @@
+import { Pagination as MUIPagination, Stack } from "@mui/material";
 
-const Pagination = ({
-  // eslint-disable-next-line react/prop-types
-  currentPage,
-  // eslint-disable-next-line react/prop-types
-  totalPages,
-  // eslint-disable-next-line react/prop-types
-  onPageChange,
-  // eslint-disable-next-line react/prop-types
-  pageRange = 5, 
-}) => {
-
-  const getPageNumbers = () => {
-    const start = Math.max(1, currentPage - Math.floor(pageRange / 2));
-    const end = Math.min(totalPages, start + pageRange - 1);
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+// eslint-disable-next-line react/prop-types
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const handleChange = (event, page) => {
+    onPageChange(page);
   };
 
   return (
-    <nav>
-      <ul className="pagination justify-content-center">
-        <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-        </li>
-        {getPageNumbers().map((page) => (
-          <li
-            className={`page-item ${currentPage === page ? "active" : ""}`}
-            key={page}
-          >
-            <button className="page-link" onClick={() => onPageChange(page)}>
-              {page}
-            </button>
-          </li>
-        ))}
-
-        {currentPage < totalPages - Math.floor(pageRange / 2) && (
-          <li className="page-item">
-            <span className="page-link">...</span>
-          </li>
-        )}
-        {currentPage < totalPages && (
-          <li className={`page-item ${currentPage === totalPages ? "active" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => onPageChange(totalPages)}
-            >
-              {totalPages}
-            </button>
-          </li>
-        )}
-        <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </li>
-      </ul>
-    </nav>
+    <Stack spacing={2} alignItems="center" sx={{ mt: 4 }}>
+      <MUIPagination
+        count={totalPages}
+        page={currentPage}
+        onChange={handleChange}
+        siblingCount={1}
+        boundaryCount={1}
+        color="primary"
+        shape="rounded"
+        showFirstButton
+        showLastButton
+        sx={{
+          "& .MuiPaginationItem-root": {
+            backgroundColor: "#ffffff", 
+            color: "#6c5ce7", 
+            border: "1px solid #ddd", 
+            transition: "all 0.3s ease",
+            "&:hover": {
+              backgroundColor: "#f3f3f3", 
+            },
+            "&.Mui-selected": {
+              backgroundColor: "#6c5ce7",
+              color: "#ffffff", 
+              boxShadow: "0px 4px 10px rgba(108, 92, 231, 0.3)", 
+              fontWeight: "bold", 
+            },
+          },
+          "& .MuiPaginationItem-ellipsis": {
+            color: "#6c5ce7", 
+          },
+        }}
+      />
+    </Stack>
   );
 };
 
