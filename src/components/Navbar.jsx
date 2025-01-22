@@ -1,39 +1,211 @@
+import { useState } from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 import { Link } from "react-router-dom";
+import MenuIcon from "@mui/icons-material/Menu";
+
 const Navbar = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  const handleOpenMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-      <div className="container">
-        <Link className="navbar-brand" to="/">
-          BlogApp
-        </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
+    <AppBar
+      position="sticky"
+      sx={{
+        background: "linear-gradient(45deg, #6200ea, #03dac6)",
+        boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+      }}
+    >
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            overflow: "hidden",
+          }}
         >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link className="nav-link" to="/">
+          <Typography
+            variant="h6"
+            component={Link}
+            to="/"
+            sx={{
+              textDecoration: "none",
+              fontWeight: "bold",
+              fontSize: "2rem",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+              background: "linear-gradient(45deg, #ff4081, #ffd700)",
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+              whiteSpace: "nowrap",
+              "&:hover": {
+                transform: "scale(1.05)",
+                textShadow: "2px 2px 6px rgba(0, 0, 0, 0.5)",
+              },
+              transition: "transform 0.3s ease",
+            }}
+          >
+            BlogApp
+          </Typography>
+        </Box>
+
+        {isMobile ? (
+          <>
+            <IconButton
+              edge="end"
+              color="inherit"
+              aria-label="menu"
+              onClick={handleOpenMenu}
+            >
+              <MenuIcon sx={{ color: "#ffffff" }} />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleCloseMenu}
+              PaperProps={{
+                sx: {
+                  backgroundColor: "rgba(18, 18, 18, 0.9)",
+                  color: "white",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.3)",
+                  borderRadius: "8px",
+                },
+              }}
+            >
+              <MenuItem
+                component={Link}
+                to="/"
+                onClick={handleCloseMenu}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#03dac6",
+                    color: "#121212",
+                  },
+                }}
+              >
                 Home
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/authors">
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/authors"
+                onClick={handleCloseMenu}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#03dac6",
+                    color: "#121212",
+                  },
+                }}
+              >
                 Authors
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-  )
-}
+              </MenuItem>
+              <MenuItem
+                component={Link}
+                to="/post"
+                onClick={handleCloseMenu}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "#03dac6",
+                    color: "#121212",
+                  },
+                }}
+              >
+                Post
+              </MenuItem>
+            </Menu>
+          </>
+        ) : (
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              component={Link}
+              to="/"
+              sx={{
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: "600",
+                padding: "8px 20px",
+                borderRadius: "30px",
+                backgroundColor: "#03dac6",
+                color: "#121212",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "#018786",
+                  transform: "scale(1.05)",
+                  boxShadow: "0 6px 12px rgba(0, 0, 0, 0.4)",
+                },
+              }}
+            >
+              Home
+            </Button>
+            <Button
+              component={Link}
+              to="/authors"
+              sx={{
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: "600",
+                padding: "8px 20px",
+                borderRadius: "30px",
+                backgroundColor: "#03dac6",
+                color: "#121212",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "#018786",
+                  transform: "scale(1.05)",
+                  boxShadow: "0 6px 12px rgba(0, 0, 0, 0.4)",
+                },
+              }}
+            >
+              Authors
+            </Button>
+            <Button
+              component={Link}
+              to="/post"
+              sx={{
+                textTransform: "none",
+                fontSize: "1rem",
+                fontWeight: "600",
+                padding: "8px 20px",
+                borderRadius: "30px",
+                backgroundColor: "#03dac6",
+                color: "#121212",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "#018786",
+                  transform: "scale(1.05)",
+                  boxShadow: "0 6px 12px rgba(0, 0, 0, 0.4)",
+                },
+              }}
+            >
+              Post
+            </Button>
+          </Box>
+        )}
+      </Toolbar>
+    </AppBar>
+  );
+};
 
 export default Navbar;
