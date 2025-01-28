@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import {
   Box,
   Typography,
+  TextField,
   Button,
   Card,
   List,
@@ -11,13 +12,15 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { ThumbUp, Comment } from "@mui/icons-material";
+import { ThumbUp, Comment, Edit } from "@mui/icons-material";
 import {
   fetchPostDetails,
   fetchLikes,
   fetchComments,
   fetchAuthorName,
+  updatePost,
 } from "../api";
 
 const PostDetails = () => {
@@ -27,6 +30,9 @@ const PostDetails = () => {
   const [comments, setComments] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogContent, setDialogContent] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -36,6 +42,31 @@ const PostDetails = () => {
 
     fetchDetails();
   }, [postId]);
+
+  const handleEditPost = () => {
+    setEditedTitle(post.title);
+    setEditedDescription(post.description);
+    setEditDialogOpen(true);
+  };
+
+  const handleSavePost = async () => {
+    try {
+      const updatedPost = {
+        ...post,
+        title: editedTitle,
+        description: editedDescription,
+      };
+      await updatePost(postId, updatedPost);
+      setPost(updatedPost);
+      setEditDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating post:", error.message);
+      alert("Failed to update the post. Please try again later.");
+    }
+  };
+  const handleEditCloseDialog = () => {
+    setEditDialogOpen(false);
+  };
 
   const handleLikesClick = async () => {
     try {
@@ -103,17 +134,44 @@ const PostDetails = () => {
           borderRadius: "12px",
         }}
       >
-        <Typography
-          variant="h4"
+        <Box
           sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             marginBottom: 2,
-            color: "#6c5ce7",
-            fontWeight: "bold",
-            textShadow: "1px 1px 6px rgba(108, 92, 231, 0.3)",
           }}
         >
-          {post.title}
-        </Typography>
+          <Typography
+            variant="h4"
+            sx={{
+              color: "#6c5ce7",
+              fontWeight: "bold",
+              textShadow: "1px 1px 6px rgba(108, 92, 231, 0.3)",
+            }}
+          >
+            {post.title}
+          </Typography>
+
+          {/* Edit Button */}
+          <Button
+            variant="outlined"
+            startIcon={<Edit />}
+            sx={{
+              backgroundColor: "white",
+              color: "#00b894",
+              borderColor: "#00b894",
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: "#eafaf1",
+                borderColor: "#00b894",
+              },
+            }}
+            onClick={handleEditPost}
+          >
+            Edit Post
+          </Button>
+        </Box>
         <Typography
           variant="body1"
           sx={{
@@ -231,6 +289,69 @@ const PostDetails = () => {
       >
         Back to Author
       </Button>
+      <Dialog
+        open={editDialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+        sx={{
+          "& .MuiDialog-paper": {
+            backgroundColor: "#f8f9fa",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            color: "#6c5ce7",
+            fontWeight: "bold",
+          }}
+        >
+          Edit Post
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Title"
+            fullWidth
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            sx={{
+              marginTop:2,
+              marginBottom: 2,
+              "& .MuiInputLabel-root": { fontSize: "1rem" },
+              "& .MuiInputLabel-root.Mui-focused": { color: "#6c5ce7" }, 
+            }}
+          />
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            rows={4}
+            value={editedDescription}
+            onChange={(e) => setEditedDescription(e.target.value)}
+            sx={{
+              "& .MuiInputLabel-root": { fontSize: "1rem" },
+              "& .MuiInputLabel-root.Mui-focused": { color: "#6c5ce7" },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditCloseDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSavePost}
+            variant="contained"
+            sx={{
+              backgroundColor: "#6c5ce7",
+              "&:hover": { backgroundColor: "#5e548e" },
+            }}
+          >
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
