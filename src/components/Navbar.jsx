@@ -11,13 +11,22 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
 
 const Navbar = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [anchorEl, setAnchorEl] = useState(null);
+  const location = useLocation();
+
+  const getTitle = () => {
+    const path = location.pathname;
+    if (path === "/") return "BlogApp";
+    if (path === "/authors") return "Authors";
+    if (path === "/post") return "Post";
+    return "BlogApp"; 
+  };
 
   const handleOpenMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -65,7 +74,7 @@ const Navbar = () => {
               transition: "transform 0.3s ease",
             }}
           >
-            BlogApp
+            {getTitle()}
           </Typography>
         </Box>
 
