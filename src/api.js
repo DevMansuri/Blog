@@ -41,3 +41,26 @@ export const fetchComments = async (postId) => {
   const postComments = data.filter((comments) => comments.postId === parseInt(postId))
   return postComments;
 };
+
+export const updatePost = async (postId, updatedPost) => {
+    try {
+      const response = await fetch(`http://localhost:3001/posts/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedPost),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update post");
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating post:", error.message);
+      throw error;
+    }
+  };
+  
