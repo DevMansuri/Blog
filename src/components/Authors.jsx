@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Pagination from "./Pagination";
 import { Link } from "react-router-dom";
-import avatarProfile from "../assets/avatarProfile.jpg";
+import avatarProfile from "../assets/profilePicture.jpg";
 import {
   Container,
   Grid,
@@ -12,6 +12,10 @@ import {
   Button,
   Box,
   TextField,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import { PostAdd, Comment, ThumbUp } from "@mui/icons-material";
 
@@ -19,6 +23,7 @@ const Authors = () => {
   const [authors, setAuthors] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [filteredAuthor, setFilteredAuthor] = useState([]);
 
   const cardsPerPage = 12;
@@ -39,19 +44,31 @@ const Authors = () => {
   }, []);
 
   const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
+    const value = event.target.value;
+    setSearchTerm(value);
 
-  const handleSearch = () => {
-    const filtered = authors.filter(
+    const liveFilteredAuthors = authors.filter(
       (author) =>
-        author.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        author.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+        author.firstName.toLowerCase().startsWith(value.toLowerCase()) ||
+        author.lastName.toLowerCase().startsWith(value.toLowerCase())
     );
-    setFilteredAuthor(filtered);
+
+    setFilteredAuthor(liveFilteredAuthors);
+    setSuggestions(value.trim() ? liveFilteredAuthors.slice(0, 5) : []);
     setCurrentPage(1);
   };
 
+  const handleSuggestionClick = (name) => {
+    setSearchTerm(name);
+    const filtered = authors.filter(
+      (author) =>
+        `${author.firstName}${author.lastName}`.toLowerCase() ===
+        name.toLowerCase()
+    );
+    setFilteredAuthor(filtered);
+    setSuggestions([]);
+    setCurrentPage(1);
+  };
   const totalPages = Math.ceil(filteredAuthor.length / cardsPerPage);
 
   const indexOfLastCard = currentPage * cardsPerPage;
@@ -76,82 +93,119 @@ const Authors = () => {
         color: "#ffffff",
       }}
     >
-      <Typography
-        variant="h4"
-        align="center"
-        gutterBottom
-        sx={{
-          background: "linear-gradient(45deg, #6c5ce7, #a29bfe)",
-          color: "transparent",
-          WebkitBackgroundClip: "text",
-          fontWeight: "bold",
-          fontSize: { xs: "2rem", sm: "3rem", md: "4rem" },
-          textShadow: "2px 2px 8px rgba(255, 255, 255, 0.2)",
-          transition: "all 0.3s ease",
-          "&:hover": {
-            background: "linear-gradient(45deg, #6c5ce7, #636e72)",
-            WebkitBackgroundClip: "text",
-            transform: "scale(1.05)",
-          },
-        }}
-      >
-        Authors
-      </Typography>
       <Box
         sx={{
+          position: "relative",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           gap: 2,
           marginBottom: 3,
+          flexDirection: { xs: "column", sm: "row" },
         }}
       >
         <TextField
           variant="outlined"
-          placeholder="Search by name"
+          placeholder="Search by title"
           value={searchTerm}
           onChange={handleSearchChange}
           sx={{
+            marginTop: "50px",
             width: { xs: "100%", sm: "70%", md: "50%" },
             "& .MuiOutlinedInput-root": {
-              color: "#1a1a1a",
+              paddingRight: 0,
               "& fieldset": {
                 borderColor: "#6c5ce7",
               },
               "&:hover fieldset": {
-                borderColor: "#1565c0",
+                borderColor: "#5e548e",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#6c5ce7",
+                borderColor: "#5e548e",
               },
             },
-            "& .MuiInputBase-input": {
-              color: "#6c5ce7",
-            },
-            "& .MuiInputBase-input::placeholder": {
-              color: "#6c757d",
-              fontStyle: "italic",
+            input: {
+              color: "#2d3436",
             },
           }}
         />
 
-        <Button
-          variant="contained"
-          onClick={handleSearch}
-          sx={{
-            backgroundColor: "#6c5ce7",
-            color: "white",
-            textTransform: "none",
-            fontWeight: "bold",
-            "&:hover": {
-              backgroundColor: "#3700b3",
-            },
-          }}
-        >
-          Search
-        </Button>
+        {suggestions.length > 0 ? (
+          <Paper
+            sx={{
+              position: "absolute",
+              top: "100%",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: { xs: "100%", sm: "70%", md: "50%" },
+              maxHeight: "200px",
+              overflowY: "auto",
+              zIndex: 10,
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+              backgroundColor: "white",
+              border: "1px solid #ddd",
+            }}
+          >
+            <List disablePadding>
+              {suggestions.map((suggestion, index) => (
+                <ListItem
+                  button
+                  key={suggestion.id}
+                  onClick={() =>
+                    handleSuggestionClick(
+                      `${suggestion.firstName}${suggestion.lastName}`
+                    )
+                  }
+                  sx={{
+                    padding: "10px 16px",
+                    backgroundColor: index % 2 === 0 ? "#9c94d5" : "#fff",
+                    "&:hover": {
+                      backgroundColor: "#f0f4ff",
+                      transition: "background-color 0.3s",
+                    },
+                  }}
+                >
+                  <ListItemText
+                    primary={`${suggestion.firstName}${suggestion.lastName}`}
+                    sx={{
+                      color: "#2d3436",
+                      fontWeight: 500,
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        ) : (
+          searchTerm &&
+          filteredAuthor.length === 0 && (
+            <Paper
+              sx={{
+                position: "absolute",
+                top: "100%",
+                width: { xs: "100%", sm: "70%", md: "50%" },
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                backgroundColor: "white",
+                border: "1px solid #ddd",
+                padding: 2,
+                textAlign: "center",
+                zIndex: 10,
+              }}
+            >
+              <Typography
+                variant="body1"
+                sx={{
+                  color: "#636e72",
+                }}
+              >
+                No results found for {searchTerm}
+              </Typography>
+            </Paper>
+          )
+        )}
       </Box>
-
       <Container
         sx={{
           my: 4,
@@ -171,20 +225,20 @@ const Authors = () => {
                   display: "flex",
                   flexDirection: "column",
                   backgroundColor: "#ffffff",
-                  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)", 
+                  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
                   transition: "all 0.3s ease",
-                  borderRadius: "8px", 
+                  borderRadius: "8px",
                   border: "1px solid #e0e0e0",
                   "&:hover": {
                     transform: "scale(1.05)",
-                    boxShadow: "0 12px 24px rgba(0, 0, 0, 0.3)", 
+                    boxShadow: "0 12px 24px rgba(0, 0, 0, 0.3)",
                   },
                 }}
               >
                 <CardMedia
                   component="img"
                   sx={{
-                    height: "150px",
+                    height: "220px",
                     objectFit: "cover",
                     width: "100%",
                     borderTopLeftRadius: "8px",
@@ -199,10 +253,10 @@ const Authors = () => {
                     component="div"
                     sx={{
                       textAlign: "center",
-                      color: "#2c3e50", 
+                      color: "#2c3e50",
                       fontWeight: "bold",
                       mb: 2,
-                      textTransform: "capitalize", 
+                      textTransform: "capitalize",
                     }}
                   >
                     {author.firstName} {author.lastName}
@@ -212,7 +266,7 @@ const Authors = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       mb: 2,
-                      color: "#555", 
+                      color: "#555",
                     }}
                   >
                     <Typography variant="body2">
@@ -234,11 +288,11 @@ const Authors = () => {
                     variant="contained"
                     sx={{
                       mt: 2,
-                      backgroundColor: "#6c5ce7", 
-                      color: "#ffffff", 
+                      backgroundColor: "#6c5ce7",
+                      color: "#ffffff",
                       fontWeight: "bold",
                       "&:hover": {
-                        backgroundColor: "#5b4dcf", 
+                        backgroundColor: "#5b4dcf",
                       },
                     }}
                   >
