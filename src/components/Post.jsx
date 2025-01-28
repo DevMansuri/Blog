@@ -11,9 +11,14 @@ import {
   DialogTitle,
   DialogContentText,
   DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import Pagination from "./Pagination";
+import { v4 as uuidv4 } from 'uuid';
 
 const Post = () => {
   const [posts, setPosts] = useState([]);
@@ -21,8 +26,18 @@ const Post = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredPosts, setFilteredPosts] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    authorId: "",
+    numLikes: 0,
+    numComments: 0,
+  });
+
   const postPerPage = 5;
 
   useEffect(() => {
@@ -31,7 +46,7 @@ const Post = () => {
         setIsLoading(true);
         const response = await fetch("http://localhost:3001/posts");
         const data = await response.json();
-        setPosts(data);
+        setPosts(data.reverse());
         setFilteredPosts(data);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -43,15 +58,74 @@ const Post = () => {
     fetchPosts();
   }, []);
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const openCreateDialog = () => setIsCreateDialogOpen(true);
+  const closeCreateDialog = () => {
+    setIsCreateDialogOpen(false);
+    setFormData({
+      title: "",
+      description: "",
+      authorId: "",
+      numLikes: 0,
+      numComments: 0,
+    });
   };
 
-  const handleSearch = () => {
+  const handleFormChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const generateRandomId = () => uuidv4();
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    const newPost = {
+      id: generateRandomId(),
+      ...formData,
+      datePublished: Date.now(),
+    };
+
+    try {
+      const response = await fetch("http://localhost:3001/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPost),
+      });
+
+      if (response.ok) {
+        const updatedPosts = [newPost, ...posts];
+        setPosts(updatedPosts);
+        setFilteredPosts(updatedPosts);
+        closeCreateDialog();
+      } else {
+        console.error("Failed to save post");
+      }
+    } catch (error) {
+      console.error("Error saving post:", error);
+    }
+  };
+
+  const handleSearchChange = (event) => {
+    const value = event.target.value;
+    setSearchTerm(value);
+    const filteredPosts = posts.filter((post) =>
+      post.title.toLowerCase().startsWith(value.toLowerCase())
+    );
+
+    setFilteredPosts(filteredPosts);
+    setSuggestions(value.trim() ? filteredPosts.slice(0, 5) : []);
+    setCurrentPage(1);
+  };
+
+  const handleSuggestionClick = (title) => {
+    setSearchTerm(title);
     const filtered = posts.filter((post) =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase())
+      post.title.toLowerCase().startsWith(title.toLowerCase())
     );
     setFilteredPosts(filtered);
+    setSuggestions([]);
     setCurrentPage(1);
   };
 
@@ -102,25 +176,68 @@ const Post = () => {
           minHeight: "100vh",
         }}
       >
-        <Typography
-          variant="h4"
-          align="center"
-          gutterBottom
+        
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={openCreateDialog}
           sx={{
-            background: "linear-gradient(45deg, #6c5ce7, #a29bfe)",
-            color: "transparent",
-            WebkitBackgroundClip: "text",
-            fontWeight: "bold",
-            fontSize: { xs: "2rem", sm: "3rem", md: "4rem" },
-            textShadow: "1px 1px 6px rgba(108, 92, 231, 0.5)",
-            transition: "all 0.3s ease",
+            backgroundColor: "#6c5ce7",
+            color: "#fff",
+            textTransform: "none",
+            padding: "10px 16px",
+            "&:hover": {
+              backgroundColor: "#5e548e",
+            },
           }}
         >
-          Posts
-        </Typography>
-
+          Create Post
+        </Button>
+        <Dialog open={isCreateDialogOpen} onClose={closeCreateDialog}>
+          <DialogTitle>Create a New Post</DialogTitle>
+          <DialogContent>
+            <form onSubmit={handleFormSubmit}>
+              <TextField
+                name="title"
+                label="Title"
+                fullWidth
+                margin="normal"
+                value={formData.title}
+                onChange={handleFormChange}
+                required
+              />
+              <TextField
+                name="description"
+                label="Description"
+                multiline
+                rows={4}
+                fullWidth
+                margin="normal"
+                value={formData.description}
+                onChange={handleFormChange}
+                required
+              />
+              <TextField
+                name="authorId"
+                label="Author ID"
+                fullWidth
+                margin="normal"
+                value={formData.authorId}
+                onChange={handleFormChange}
+                required
+              />
+              <DialogActions>
+                <Button onClick={closeCreateDialog}>Cancel</Button>
+                <Button type="submit" variant="contained" color="primary">
+                  Submit
+                </Button>
+              </DialogActions>
+            </form>
+          </DialogContent>
+        </Dialog>
         <Box
           sx={{
+            position: "relative",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -135,8 +252,10 @@ const Post = () => {
             value={searchTerm}
             onChange={handleSearchChange}
             sx={{
+              marginTop: "50px",
               width: { xs: "100%", sm: "70%", md: "50%" },
               "& .MuiOutlinedInput-root": {
+                paddingRight: 0,
                 "& fieldset": {
                   borderColor: "#6c5ce7",
                 },
@@ -152,23 +271,79 @@ const Post = () => {
               },
             }}
           />
-          <Button
-            variant="contained"
-            onClick={handleSearch}
-            sx={{
-              backgroundColor: "#6c5ce7",
-              color: "white",
-              textTransform: "none",
-              "&:hover": {
-                backgroundColor: "#5e548e",
-              },
-              width: { xs: "100%", sm: "auto" },
-            }}
-          >
-            Search
-          </Button>
-        </Box>
 
+          {suggestions.length > 0 ? (
+            <Paper
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: { xs: "100%", sm: "70%", md: "50%" },
+                maxHeight: "200px",
+                overflowY: "auto",
+                zIndex: 10,
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                backgroundColor: "white",
+                border: "1px solid #ddd",
+              }}
+            >
+              <List disablePadding>
+                {suggestions.map((suggestion, index) => (
+                  <ListItem
+                    button
+                    key={suggestion.id}
+                    onClick={() => handleSuggestionClick(suggestion.title)}
+                    sx={{
+                      padding: "10px 16px",
+                      backgroundColor: index % 2 === 0 ? "#9c94d5" : "#fff",
+                      "&:hover": {
+                        backgroundColor: "#f0f4ff",
+                        transition: "background-color 0.3s",
+                      },
+                    }}
+                  >
+                    <ListItemText
+                      primary={suggestion.title}
+                      sx={{
+                        color: "#2d3436",
+                        fontWeight: 500,
+                      }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          ) : (
+            searchTerm &&
+            filteredPosts.length === 0 && (
+              <Paper
+                sx={{
+                  position: "absolute",
+                  top: "100%",
+                  width: { xs: "100%", sm: "70%", md: "50%" },
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                  backgroundColor: "white",
+                  border: "1px solid #ddd",
+                  padding: 2,
+                  textAlign: "center",
+                  zIndex: 10,
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: "#636e72",
+                  }}
+                >
+                  No results found for {searchTerm}
+                </Typography>
+              </Paper>
+            )
+          )}
+        </Box>
         {isLoading ? (
           <Box
             sx={{
@@ -176,6 +351,7 @@ const Post = () => {
               justifyContent: "center",
               alignItems: "center",
               height: "50vh",
+              marginTop: "50px",
             }}
           >
             <CircularProgress sx={{ color: "#6c5ce7" }} />
@@ -252,8 +428,8 @@ const Post = () => {
                   sx={{
                     display: "flex",
                     gap: 1,
-                    flexDirection: { xs: "column", sm: "row" }, // Stack buttons vertically on small screens
-                    alignItems: "center", // Align buttons to the center
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: "center",
                   }}
                 >
                   <Button
@@ -264,7 +440,7 @@ const Post = () => {
                       color: "#6c5ce7",
                       borderColor: "#6c5ce7",
                       textTransform: "none",
-                      width: { xs: "100%", sm: "auto" }, // Full width on mobile, auto width on larger screens
+                      width: { xs: "100%", sm: "auto" },
                       "&:hover": {
                         backgroundColor: "#f1f2f6",
                       },
@@ -278,7 +454,7 @@ const Post = () => {
                     startIcon={<Delete />}
                     onClick={() => openDeleteDialog(post.id)}
                     sx={{
-                      width: { xs: "100%", sm: "auto" }, // Full width on mobile, auto width on larger screens
+                      width: { xs: "100%", sm: "auto" },
                     }}
                   >
                     Delete
@@ -288,7 +464,6 @@ const Post = () => {
             </Box>
           ))
         )}
-
         <Pagination
           sx={{
             mt: 4,
@@ -306,13 +481,11 @@ const Post = () => {
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
-
         <Dialog open={isDialogOpen} onClose={closeDeleteDialog}>
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
-            <DialogContentText>
-              Are you sure you want to delete this post? This action cannot be
-              undone.
+            <DialogContentText sx={{ color: "#e84444" }}>
+              Are you sure you want to delete this post?
             </DialogContentText>
           </DialogContent>
           <DialogActions>
